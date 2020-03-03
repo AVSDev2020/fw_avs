@@ -1,5 +1,6 @@
 package com.fw.amazon.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fw.amazon.common.response.QueryOrderListResponse;
+import com.fw.amazon.service.OrderService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -20,6 +22,9 @@ import io.swagger.annotations.ApiResponses;
 @RestController
 public class QueryOrderController {
 
+	@Autowired
+	private OrderService orderService;
+	
 	@GetMapping(path="/orders", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(tags="Order", value="Get Order List", produces = MediaType.APPLICATION_JSON_VALUE)
