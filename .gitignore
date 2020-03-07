@@ -32,4 +32,4 @@ build/
 
 ### LOGS
 logs
-c:
+LOG_HOME_IS_UNDEFINED
