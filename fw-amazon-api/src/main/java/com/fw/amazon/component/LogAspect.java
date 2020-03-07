@@ -4,7 +4,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -24,10 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 public class LogAspect {
 	
 	@Pointcut("execution(public * com.fw.amazon.controller..*.*(..))")
-	public void log() {	
+	public void logController() {		
 	}
 	
-	@Before("log()")
+	@Pointcut("execution(public * com.fw.amazon.service..*.*(..))")
+	public void logService() {		
+	} 
+	
+	@Before("logController()")
 	public void doBefore(JoinPoint joinPoint){
 		try {
 			ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -46,7 +53,7 @@ public class LogAspect {
 		
 	}
 	
-	@AfterReturning(returning = "ret", pointcut = "log()")
+	@AfterReturning(returning = "ret", pointcut = "logController()")
 	public void doAfterReturning(Object ret) {
 		try {
 			HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
@@ -60,6 +67,33 @@ public class LogAspect {
 		} catch(Exception ex) {
 			log.error("LogAspect exception: ", ex.getMessage());
 		}
+	}
+	
+	@Around("logService()")
+	public Object doAround(ProceedingJoinPoint joinPoint) throws Throwable{
+		Object result = null;
+		long time = System.currentTimeMillis();
+		try {
+			Signature signature = joinPoint.getSignature();	
+			String serviceName = signature.getDeclaringTypeName() + "." + signature.getName();
+			LogService logService = new LogService(time, 
+					serviceName, 
+					JSON.toJSONString(joinPoint.getArgs()), null);
+			if(log.isDebugEnabled()) { 
+				log.debug(JSON.toJSONString(logService));
+			}
+			result = joinPoint.proceed();			
+			time = System.currentTimeMillis();
+			logService = new LogService(time, serviceName, null, JSON.toJSONString(result));
+			if(log.isDebugEnabled()) {
+				log.debug(JSON.toJSONString(logService));
+			}
+			return result;
+		} catch (Exception ex) {
+			log.error("LogAspect exception: ", ex.getMessage());
+			//ex.printStackTrace();
+		}
+		return result;
 	}
 	
 	@Data
@@ -77,7 +111,16 @@ public class LogAspect {
 	class LogResponse {
 		private long tracedId;
 		private int status;
-		private String args;
+		private String params;
+	}
+	
+	@Data
+	@AllArgsConstructor
+	class LogService {
+		private long tracedId;
+		private String methodName;
+		private String params;	
+		private String result;
 	}
 
 }
