@@ -1,5 +1,7 @@
 package com.fw.amazon.controller;
 
+import com.fw.amazon.common.param.VendorOrder;
+import com.fw.amazon.service.EdiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,12 +20,17 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+import java.util.List;
+
 @Api
 @RestController
 public class QueryOrderController {
 
 	@Autowired
 	private OrderService orderService;
+
+	@Autowired
+	private EdiService ediService;
 	
 	@GetMapping(path="/orders", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
@@ -42,7 +49,11 @@ public class QueryOrderController {
 			@RequestParam(required = false) Integer limit,
 			@RequestParam(required = false) String sort) {
 		QueryOrderListResponse response = new QueryOrderListResponse();
-		
 		return response;
+	}
+
+	@GetMapping(path = "/vendor_orders", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<VendorOrder> getVendorOrder() {
+		return ediService.getAllOrders();
 	}
 }
